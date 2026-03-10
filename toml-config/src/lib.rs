@@ -1633,6 +1633,9 @@ fn load_config(initial_load: bool, auto_reload: bool, persistent: &Rc<Persistent
     if let Some(v) = config.fallback_output_mode {
         persistent.seat.set_fallback_output_mode(v);
     }
+    if let Some(mouse_refocus) = config.mouse_refocus {
+        persistent.seat.set_mouse_refocus(mouse_refocus);
+    }
 }
 
 fn create_command(exec: &Exec) -> Command {

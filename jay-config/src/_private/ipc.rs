@@ -841,6 +841,10 @@ pub enum ClientMessage<'a> {
         fds: Vec<(i32, i32)>,
         tag: Option<&'a str>,
     },
+    SeatSetMouseRefocus {
+        seat: Seat,
+        enabled: bool,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]

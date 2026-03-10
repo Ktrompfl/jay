@@ -37,7 +37,7 @@ use {
             },
             jay_screencast::{perform_screencast_realloc, perform_toplevel_screencasts},
             wl_output::{BlendSpace, OutputId, PersistentOutputState, WlOutputGlobal},
-            wl_seat::handle_position_hint_requests,
+            wl_seat::{handle_mouse_refocus, handle_position_hint_requests},
             wl_surface::{
                 NoneSurfaceExt, xdg_surface::handle_xdg_surface_configure_events,
                 zwp_input_popup_surface_v2::input_popup_positioning,
@@ -375,6 +375,7 @@ fn start_compositor2(
         toplevel_managers: Default::default(),
         node_at_tree: Default::default(),
         position_hint_requests: Default::default(),
+        pending_mouse_refocus: Default::default(),
         backend_connector_state_serials: Default::default(),
         head_names: Default::default(),
         head_managers: Default::default(),
@@ -594,6 +595,7 @@ fn start_global_event_handlers(state: &Rc<State>) -> Vec<SpawnedFuture<()>> {
             "lazy event sources",
             handle_lazy_event_sources(state.clone()),
         ),
+        eng.spawn("mouse refocus", handle_mouse_refocus(state.clone())),
     ]
 }
 

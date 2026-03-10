@@ -2370,6 +2370,12 @@ impl ConfigProxyHandler {
         Ok(())
     }
 
+    fn handle_seat_set_mouse_refocus(&self, seat: Seat, enabled: bool) -> Result<(), CphError> {
+        let seat = self.get_seat(seat)?;
+        seat.set_mouse_refocus(enabled);
+        Ok(())
+    }
+
     fn get_sized(&self, sized: Resizable) -> Result<ThemeSized, CphError> {
         use jay_config::theme::sized::*;
         let sized = match sized {
@@ -2542,6 +2548,7 @@ impl ConfigProxyHandler {
             return Err(CphError::WindowNotVisible(window_id));
         }
         seat.focus_toplevel(window);
+        seat.schedule_mouse_refocus();
         Ok(())
     }
 
@@ -3284,6 +3291,9 @@ impl ConfigProxyHandler {
             ClientMessage::SeatEnableUnicodeInput { seat } => self
                 .handle_seat_enable_unicode_input(seat)
                 .wrn("seat_enable_unicode_input")?,
+            ClientMessage::SeatSetMouseRefocus { seat, enabled } => self
+                .handle_seat_set_mouse_refocus(seat, enabled)
+                .wrn("seat_set_mouse_refocus")?,
             ClientMessage::ConnectorSetUseNativeGamut {
                 connector,
                 use_native_gamut,

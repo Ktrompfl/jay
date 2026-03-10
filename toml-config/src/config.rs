@@ -541,6 +541,7 @@ pub struct Config {
     pub workspace_display_order: Option<WorkspaceDisplayOrder>,
     pub simple_im: Option<SimpleIm>,
     pub fallback_output_mode: Option<FallbackOutputMode>,
+    pub mouse_refocus: Option<bool>,
 }
 
 #[derive(Debug, Error)]

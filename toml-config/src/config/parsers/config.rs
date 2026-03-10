@@ -150,6 +150,7 @@ impl Parser for ConfigParser<'_> {
                 simple_im_val,
                 show_titles,
                 fallback_output_mode_val,
+                mouse_refocus,
             ),
         ) = ext.extract((
             (
@@ -208,6 +209,7 @@ impl Parser for ConfigParser<'_> {
                 opt(val("simple-im")),
                 recover(opt(bol("show-titles"))),
                 opt(val("fallback-output-mode")),
+                recover(opt(bol("mouse-refocus"))),
             ),
         ))?;
         let mut keymap = None;
@@ -587,6 +589,7 @@ impl Parser for ConfigParser<'_> {
             workspace_display_order,
             simple_im,
             fallback_output_mode,
+            mouse_refocus: mouse_refocus.despan(),
         })
     }
 }

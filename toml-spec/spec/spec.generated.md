@@ -1923,6 +1923,25 @@ The table has the following fields:
 
   The value of this field should be a boolean.
 
+- `mouse-refocus` (optional):
+
+  Configures whether the mouse cursor is automatically centered on the active window
+  when focus changes via keyboard commands.
+  
+  When enabled, the cursor will be automatically positioned to the center of the
+  active window when focus changes through keyboard commands such as `focus-left`,
+  `focus-right`, `show-workspace`, etc.
+  
+  The default is `false`.
+  
+  - Example:
+  
+    ```toml
+    mouse-refocus = true
+    ```
+
+  The value of this field should be a boolean.
+
 - `window-management-key` (optional):
 
   Configures a key that will enable window management mode while pressed.
