@@ -152,6 +152,7 @@ impl Parser for ConfigParser<'_> {
                 show_titles,
                 fallback_output_mode_val,
                 egui_val,
+                mouse_follows_focus,
             ),
         ) = ext.extract((
             (
@@ -211,6 +212,7 @@ impl Parser for ConfigParser<'_> {
                 recover(opt(bol("show-titles"))),
                 opt(val("fallback-output-mode")),
                 opt(val("egui")),
+                recover(opt(bol("mouse-follows-focus"))),
             ),
         ))?;
         let mut keymap = None;
@@ -600,6 +602,7 @@ impl Parser for ConfigParser<'_> {
             workspace_display_order,
             simple_im,
             fallback_output_mode,
+            mouse_follows_focus: mouse_follows_focus.despan(),
         })
     }
 }

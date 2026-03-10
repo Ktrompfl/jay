@@ -650,6 +650,14 @@ impl Seat {
     pub fn warp_mouse_to_focus(self) {
         get!().seat_warp_mouse_to_focus(self)
     }
+
+    /// Sets whether the cursor should automatically move to the center of a window
+    /// when focus changes via keyboard commands (move-left, focus-right, show-workspace, etc.).
+    ///
+    /// The default is `false`.
+    pub fn set_mouse_follows_focus(self, enabled: bool) {
+        get!().seat_set_mouse_follows_focus(self, enabled)
+    }
 }
 
 /// A focus-follows-mouse mode.
