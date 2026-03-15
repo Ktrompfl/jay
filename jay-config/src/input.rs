@@ -653,6 +653,11 @@ impl Seat {
     pub fn set_mouse_follows_focus(self, enabled: bool) {
         get!().seat_set_mouse_follows_focus(self, enabled)
     }
+
+    /// Warps the cursor to the center of the currently focused window.
+    pub fn warp_mouse_to_focus(self) {
+        get!().seat_warp_mouse_to_focus(self)
+    }
 }
 
 /// A focus-follows-mouse mode.

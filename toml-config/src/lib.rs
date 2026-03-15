@@ -245,6 +245,10 @@ impl Action {
                     let persistent = state.persistent.clone();
                     b.new(move || persistent.seat.enable_unicode_input())
                 }
+                SimpleCommand::WarpMouseToFocus => {
+                    let persistent = state.persistent.clone();
+                    b.new(move || persistent.seat.warp_mouse_to_focus())
+                }
             },
             Action::Multi { actions } => {
                 let actions: Vec<_> = actions.into_iter().map(|a| a.into_fn(state)).collect();

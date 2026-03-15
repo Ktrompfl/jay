@@ -845,6 +845,9 @@ pub enum ClientMessage<'a> {
         seat: Seat,
         enabled: bool,
     },
+    SeatWarpMouseToFocus {
+        seat: Seat,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]

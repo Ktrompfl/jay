@@ -2376,6 +2376,12 @@ impl ConfigProxyHandler {
         Ok(())
     }
 
+     pub fn handle_seat_warp_mouse_to_focus(&self, seat: Seat) -> Result<(), CphError> {
+        let seat = self.get_seat(seat)?;
+        seat.schedule_warp_mouse_to_focus();
+        Ok(())
+    }
+
     fn get_sized(&self, sized: Resizable) -> Result<ThemeSized, CphError> {
         use jay_config::theme::sized::*;
         let sized = match sized {
@@ -3294,6 +3300,9 @@ impl ConfigProxyHandler {
             ClientMessage::SeatSetMouseFollowsFocus { seat, enabled } => self
                 .handle_seat_set_mouse_follows_focus(seat, enabled)
                 .wrn("seat_set_mouse_follows_focus")?,
+            ClientMessage::SeatWarpMouseToFocus { seat } => self
+                .handle_seat_warp_mouse_to_focus(seat)
+                .wrn("seat_warp_mouse_to_focus")?,
             ClientMessage::ConnectorSetUseNativeGamut {
                 connector,
                 use_native_gamut,

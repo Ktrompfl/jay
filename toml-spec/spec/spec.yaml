@@ -1089,6 +1089,9 @@ SimpleActionName:
         Enables Unicode input in the simple, XCompose based input method.
         
         This has no effect if the simple IM is not currently active.
+    - value: warp-mouse-to-focus
+      description: |
+        Warps the cursor to the center of the currently focused window.
 
 
 Color:

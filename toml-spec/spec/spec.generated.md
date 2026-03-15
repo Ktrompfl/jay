@@ -4414,6 +4414,10 @@ The string should have one of the following values:
   
   This has no effect if the simple IM is not currently active.
 
+- `warp-mouse-to-focus`:
+
+  Warps the cursor to the center of the currently focused window.
+
 
 
 <a name="types-SimpleIm"></a>
