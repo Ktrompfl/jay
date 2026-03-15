@@ -276,7 +276,7 @@ pub struct State {
     pub caps_thread: Option<PrCapsThread>,
     pub node_at_tree: RefCell<Vec<FoundNode>>,
     pub position_hint_requests: AsyncQueue<PositionHintRequest>,
-    pub pending_mouse_refocus: AsyncQueue<Rc<WlSeatGlobal>>,
+    pub pending_warp_mouse_to_focus: AsyncQueue<Rc<WlSeatGlobal>>,
     pub backend_connector_state_serials: BackendConnectorStateSerials,
     pub head_names: HeadNames,
     pub head_managers:
@@ -946,7 +946,7 @@ impl State {
         };
         self.show_workspace2(Some(seat), &ws.output.get(), &ws);
 
-        seat.schedule_mouse_refocus();
+        seat.schedule_warp_mouse_to_focus();
     }
 
     pub fn float_map_ws(&self) -> Rc<WorkspaceNode> {
@@ -1148,7 +1148,7 @@ impl State {
         self.tl_matcher_manager.clear();
         self.node_at_tree.borrow_mut().clear();
         self.position_hint_requests.clear();
-        self.pending_mouse_refocus.clear();
+        self.pending_warp_mouse_to_focus.clear();
         self.head_managers.clear();
         self.head_managers_async.clear();
         self.const_40hz_latch.clear();

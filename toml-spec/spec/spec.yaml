@@ -2695,7 +2695,7 @@ Config:
         focus to that window.
 
         The default is `true`.
-    mouse-refocus:
+    mouse-follows-focus:
       kind: boolean
       required: false
       description: |
@@ -2711,7 +2711,7 @@ Config:
         - Example:
 
           ```toml
-          mouse-refocus = true
+          mouse-follows-focus = true
           ```
     window-management-key:
       kind: string

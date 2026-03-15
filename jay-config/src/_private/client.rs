@@ -1073,8 +1073,8 @@ impl ConfigClient {
         self.send(&ClientMessage::SeatEnableUnicodeInput { seat });
     }
 
-    pub fn seat_set_mouse_refocus(&self, seat: Seat, enabled: bool) {
-        self.send(&ClientMessage::SeatSetMouseRefocus { seat, enabled });
+    pub fn seat_set_mouse_follows_focus(&self, seat: Seat, enabled: bool) {
+        self.send(&ClientMessage::SeatSetMouseFollowsFocus { seat, enabled });
     }
 
     pub fn set_show_float_pin_icon(&self, show: bool) {

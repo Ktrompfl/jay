@@ -253,8 +253,8 @@ pub struct WlSeatGlobal {
     modifiers_forward: EventSource<dyn LedsListener>,
     simple_im: CloneCell<Option<Rc<SimpleIm>>>,
     simple_im_enabled: Cell<bool>,
-    mouse_refocus: Cell<bool>,
-    mouse_refocus_scheduled: Cell<bool>,
+    mouse_follows_focus: Cell<bool>,
+    warp_mouse_to_focus_scheduled: Cell<bool>,
 }
 
 impl PartialEq for WlSeatGlobal {
@@ -388,8 +388,8 @@ impl WlSeatGlobal {
             modifiers_forward: Default::default(),
             simple_im: CloneCell::new(simple_im),
             simple_im_enabled: Cell::new(true),
-            mouse_refocus: Cell::new(false),
-            mouse_refocus_scheduled: Cell::new(false),
+            mouse_follows_focus: Cell::new(false),
+            warp_mouse_to_focus_scheduled: Cell::new(false),
         });
         slf.pointer_cursor.set_owner(slf.clone());
         slf.modifiers_listener
@@ -531,7 +531,7 @@ impl WlSeatGlobal {
         };
         toplevel_set_workspace(&self.state, tl, ws);
 
-        self.schedule_mouse_refocus();
+        self.schedule_warp_mouse_to_focus();
     }
 
     pub fn mark_last_active(self: &Rc<Self>) {
@@ -732,7 +732,7 @@ impl WlSeatGlobal {
             && let Some(tl) = parent.node_toplevel()
         {
             self.focus_node(tl);
-            self.schedule_mouse_refocus();
+            self.schedule_warp_mouse_to_focus();
         }
     }
 
@@ -811,12 +811,12 @@ impl WlSeatGlobal {
             }
         }
 
-        self.schedule_mouse_refocus();
+        self.schedule_warp_mouse_to_focus();
     }
 
-    pub fn schedule_mouse_refocus(self: &Rc<Self>) {
-        if self.mouse_refocus() && !self.mouse_refocus_scheduled.replace(true) {
-            self.state.pending_mouse_refocus.push(self.clone());
+    pub fn schedule_warp_mouse_to_focus(self: &Rc<Self>) {
+        if self.mouse_follows_focus() && !self.warp_mouse_to_focus_scheduled.replace(true) {
+            self.state.pending_warp_mouse_to_focus.push(self.clone());
         }
     }
 
@@ -845,7 +845,7 @@ impl WlSeatGlobal {
             c.move_child(tl, direction);
         }
 
-        self.schedule_mouse_refocus();
+        self.schedule_warp_mouse_to_focus();
     }
 
     pub fn get_last_focus_on_workspace(&self, ws: &WorkspaceNode) -> Option<Rc<dyn Node>> {
@@ -966,7 +966,7 @@ impl WlSeatGlobal {
         }
         self.focus_node(node);
 
-        self.schedule_mouse_refocus();
+        self.schedule_warp_mouse_to_focus();
     }
 
     pub fn focus_prev(self: &Rc<Self>) {
@@ -1030,6 +1030,7 @@ impl WlSeatGlobal {
                     n.deref()
                         .clone()
                         .node_do_focus(self, Direction::Unspecified);
+                    self.schedule_warp_mouse_to_focus();
                     return;
                 }
             }
@@ -1041,6 +1042,7 @@ impl WlSeatGlobal {
                     n.deref()
                         .clone()
                         .node_do_focus(self, Direction::Unspecified);
+                    self.schedule_warp_mouse_to_focus();
                     return;
                 }
             }
@@ -1082,6 +1084,7 @@ impl WlSeatGlobal {
                         && ws.container_visible()
                     {
                         self.focus_node(ws.clone());
+                        self.schedule_warp_mouse_to_focus();
                         return;
                     }
                     None
@@ -1106,6 +1109,7 @@ impl WlSeatGlobal {
             if let Some(n) = node {
                 if node_viable(&*n) {
                     n.node_do_focus(self, Direction::Unspecified);
+                    self.schedule_warp_mouse_to_focus();
                     return;
                 }
             }
@@ -1159,6 +1163,7 @@ impl WlSeatGlobal {
         };
         if node.node_visible() && node.node_accepts_focus() {
             node.node_do_focus(self, Direction::Unspecified);
+            self.schedule_warp_mouse_to_focus();
         }
     }
 
@@ -1502,12 +1507,12 @@ impl WlSeatGlobal {
         self.focus_follows_mouse.get()
     }
 
-    pub fn set_mouse_refocus(&self, enabled: bool) {
-        self.mouse_refocus.set(enabled);
+    pub fn set_mouse_follows_focus(&self, enabled: bool) {
+        self.mouse_follows_focus.set(enabled);
     }
 
-    pub fn mouse_refocus(&self) -> bool {
-        self.mouse_refocus.get()
+    pub fn mouse_follows_focus(&self) -> bool {
+        self.mouse_follows_focus.get()
     }
 
     pub fn set_fallback_output_mode(&self, fallback_output_mode: FallbackOutputMode) {
@@ -2005,12 +2010,12 @@ pub async fn handle_position_hint_requests(state: Rc<State>) {
     }
 }
 
-pub async fn handle_mouse_refocus(state: Rc<State>) {
+pub async fn handle_warp_mouse_to_focus(state: Rc<State>) {
     loop {
-        state.pending_mouse_refocus.non_empty().await;
+        state.pending_warp_mouse_to_focus.non_empty().await;
         state.eng.yield_now().await;
-        while let Some(seat) = state.pending_mouse_refocus.try_pop() {
-            seat.mouse_refocus_scheduled.set(false);
+        while let Some(seat) = state.pending_warp_mouse_to_focus.try_pop() {
+            seat.warp_mouse_to_focus_scheduled.set(false);
             let Some(tl) = seat.keyboard_node.get().node_toplevel() else {
                 continue;
             };

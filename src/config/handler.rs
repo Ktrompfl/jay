@@ -2370,9 +2370,9 @@ impl ConfigProxyHandler {
         Ok(())
     }
 
-    fn handle_seat_set_mouse_refocus(&self, seat: Seat, enabled: bool) -> Result<(), CphError> {
+    fn handle_seat_set_mouse_follows_focus(&self, seat: Seat, enabled: bool) -> Result<(), CphError> {
         let seat = self.get_seat(seat)?;
-        seat.set_mouse_refocus(enabled);
+        seat.set_mouse_follows_focus(enabled);
         Ok(())
     }
 
@@ -2548,7 +2548,7 @@ impl ConfigProxyHandler {
             return Err(CphError::WindowNotVisible(window_id));
         }
         seat.focus_toplevel(window);
-        seat.schedule_mouse_refocus();
+        seat.schedule_warp_mouse_to_focus();
         Ok(())
     }
 
@@ -3291,9 +3291,9 @@ impl ConfigProxyHandler {
             ClientMessage::SeatEnableUnicodeInput { seat } => self
                 .handle_seat_enable_unicode_input(seat)
                 .wrn("seat_enable_unicode_input")?,
-            ClientMessage::SeatSetMouseRefocus { seat, enabled } => self
-                .handle_seat_set_mouse_refocus(seat, enabled)
-                .wrn("seat_set_mouse_refocus")?,
+            ClientMessage::SeatSetMouseFollowsFocus { seat, enabled } => self
+                .handle_seat_set_mouse_follows_focus(seat, enabled)
+                .wrn("seat_set_mouse_follows_focus")?,
             ClientMessage::ConnectorSetUseNativeGamut {
                 connector,
                 use_native_gamut,

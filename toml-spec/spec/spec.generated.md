@@ -1923,7 +1923,7 @@ The table has the following fields:
 
   The value of this field should be a boolean.
 
-- `mouse-refocus` (optional):
+- `mouse-follows-focus` (optional):
 
   Configures whether the mouse cursor is automatically centered on the active window
   when focus changes via keyboard commands.
@@ -1937,7 +1937,7 @@ The table has the following fields:
   - Example:
   
     ```toml
-    mouse-refocus = true
+    mouse-follows-focus = true
     ```
 
   The value of this field should be a boolean.

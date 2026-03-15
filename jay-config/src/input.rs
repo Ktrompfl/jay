@@ -650,8 +650,8 @@ impl Seat {
     /// when focus changes via keyboard commands (move-left, focus-right, show-workspace, etc.).
     ///
     /// The default is `false`.
-    pub fn set_mouse_refocus(self, enabled: bool) {
-        get!().seat_set_mouse_refocus(self, enabled)
+    pub fn set_mouse_follows_focus(self, enabled: bool) {
+        get!().seat_set_mouse_follows_focus(self, enabled)
     }
 }
 
