@@ -844,8 +844,6 @@ impl WlSeatGlobal {
         {
             c.move_child(tl, direction);
         }
-
-        self.schedule_warp_mouse_to_focus();
     }
 
     pub fn get_last_focus_on_workspace(&self, ws: &WorkspaceNode) -> Option<Rc<dyn Node>> {
