@@ -9,6 +9,7 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    crane.url = "github:ipetkov/crane";
   };
 
   outputs =
@@ -16,6 +17,7 @@
       self,
       nixpkgs,
       rust-overlay,
+      crane,
     }:
     let
       inherit (nixpkgs) lib;
@@ -32,101 +34,123 @@
           )
         );
 
+      jayConfigVersion = (lib.importTOML ./jay-config/Cargo.toml).package.version;
+
+      # `jay` depends on `jay-config` as a workspace member. Building `jay`
+      # against the cargoArtifacts produced while building the `jay-config`
+      # package means jay-config's own compilation is reused instead of
+      # happening a second time as part of jay's build.
       jayPackage =
         {
           lib,
           stdenv,
-          rustPlatform,
+          craneLib,
+          commonArgs,
+          cargoArtifacts,
           autoPatchelfHook,
           installShellFiles,
-          pkgconf,
-          fontconfig,
-          libgbm,
-          libinput,
-          pango,
-          udev,
-          xkeyboard-config,
           libglvnd,
           sqlite,
           vulkan-loader,
         }:
-        rustPlatform.buildRustPackage {
-          pname = "jay";
-          version = self.shortRev or self.dirtyShortRev or "unknown";
+        craneLib.buildPackage (
+          commonArgs
+          // {
+            pname = "jay";
+            version = self.shortRev or self.dirtyShortRev or "unknown";
 
-          src = lib.fileset.toSource {
-            root = ./.;
-            fileset = lib.fileset.gitTracked ./.;
-          };
+            inherit cargoArtifacts;
 
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-          };
+            nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+              autoPatchelfHook
+              installShellFiles
+            ];
 
-          nativeBuildInputs = [
-            autoPatchelfHook
-            installShellFiles
-            pkgconf
-          ];
+            runtimeDependencies = [
+              libglvnd
+              sqlite.out
+              vulkan-loader
+            ];
 
-          buildInputs = [
-            fontconfig
-            libgbm
-            libinput
-            pango
-            udev
-            xkeyboard-config
-          ];
+            # Jay uses https://docs.rs/dlopen-note/latest/dlopen_note/ to declare its optional runtime
+            # dependencies in ELF metadata (https://uapi-group.org/specifications/specs/elf_dlopen_metadata/).
+            # However, auto-patchelf fails if these dependencies are not present at compile time.
+            autoPatchelfIgnoreMissingDeps = [
+              "libGLESv2.so.2"
+              "libEGL.so.1"
+              "libsqlite3.so.0"
+              "libvulkan.so.1"
+            ];
 
-          runtimeDependencies = [
-            libglvnd
-            sqlite.out
-            vulkan-loader
-          ];
-
-          # Jay uses https://docs.rs/dlopen-note/latest/dlopen_note/ to declare its optional runtime
-          # dependencies in ELF metadata (https://uapi-group.org/specifications/specs/elf_dlopen_metadata/).
-          # However, auto-patchelf fails if these dependencies are not present at compile time.
-          autoPatchelfIgnoreMissingDeps = [
-            "libGLESv2.so.2"
-            "libEGL.so.1"
-            "libsqlite3.so.0"
-            "libvulkan.so.1"
-          ];
-
-          checkFlags = [
             # the following tests require access to io_uring, which is disabled in the sandboxed build environment
-            "--skip=cpu_worker::tests::cancel"
-            "--skip=cpu_worker::tests::complete"
-            "--skip=eventfd_cache::tests::test"
-            "--skip=io_uring::ops::read_write_no_cancel::tests::cancel_in_kernel"
-            "--skip=io_uring::ops::read_write_no_cancel::tests::cancel_in_userspace"
-          ];
+            cargoTestExtraArgs =
+              "-- "
+              + lib.concatMapStringsSep " " (test: "--skip=${test}") [
+                "cpu_worker::tests::cancel"
+                "cpu_worker::tests::complete"
+                "eventfd_cache::tests::test"
+                "io_uring::ops::read_write_no_cancel::tests::cancel_in_kernel"
+                "io_uring::ops::read_write_no_cancel::tests::cancel_in_userspace"
+              ];
 
-          postInstall = ''
-            install -D etc/jay.portal $out/share/xdg-desktop-portal/portals/jay.portal
-            install -D etc/jay-portals.conf $out/share/xdg-desktop-portal/jay-portals.conf
-            install -D etc/jay.desktop $out/share/wayland-sessions/jay.desktop
-          ''
-          + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
-            installShellCompletion --cmd jay \
-              --bash <("$out/bin/jay" generate-completion bash) \
-              --zsh <("$out/bin/jay" generate-completion zsh) \
-              --fish <("$out/bin/jay" generate-completion fish)
-          '';
+            postInstall = ''
+              install -D etc/jay.portal $out/share/xdg-desktop-portal/portals/jay.portal
+              install -D etc/jay-portals.conf $out/share/xdg-desktop-portal/jay-portals.conf
+              install -D etc/jay.desktop $out/share/wayland-sessions/jay.desktop
+            ''
+            + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+              installShellCompletion --cmd jay \
+                --bash <("$out/bin/jay" generate-completion bash) \
+                --zsh <("$out/bin/jay" generate-completion zsh) \
+                --fish <("$out/bin/jay" generate-completion fish)
+            '';
 
-          passthru = {
-            providedSessions = [ "jay" ];
-          };
+            passthru = {
+              providedSessions = [ "jay" ];
+            };
 
-          meta = with lib; {
-            description = "Wayland compositor written in Rust";
-            homepage = "https://github.com/mahkoh/jay";
-            license = licenses.gpl3;
-            platforms = platforms.linux;
-            mainProgram = "jay";
-          };
-        };
+            meta = with lib; {
+              description = "Wayland compositor written in Rust";
+              homepage = "https://github.com/mahkoh/jay";
+              license = licenses.gpl3;
+              platforms = platforms.linux;
+              mainProgram = "jay";
+            };
+          }
+        );
+
+      # A package usable to build shared library configurations for jay, e.g. a
+      # crate with `crate-type = ["cdylib"]` that has `jay-config` as a path
+      # dependency. Exposing jay-config's own cargoArtifacts lets such a config
+      # crate be built with crane without recompiling jay-config or its
+      # dependencies from scratch.
+      jayConfigPackage =
+        {
+          lib,
+          craneLib,
+          commonArgs,
+          cargoArtifacts,
+        }:
+        craneLib.buildPackage (
+          commonArgs
+          // {
+            pname = "jay-config";
+            version = jayConfigVersion;
+
+            inherit cargoArtifacts;
+
+            cargoExtraArgs = "--locked -p jay-config";
+            doInstallCargoArtifacts = true;
+            doCheck = false;
+
+            meta = with lib; {
+              description = "Configuration crate for the Jay compositor";
+              homepage = "https://github.com/mahkoh/jay";
+              license = licenses.gpl3;
+              platforms = platforms.linux;
+            };
+          }
+        );
 
     in
     {
@@ -154,20 +178,49 @@
         pkgs:
         let
           rust = pkgs.rust-bin.stable.latest.default;
-          rustPlatform = pkgs.makeRustPlatform {
-            cargo = rust;
-            rustc = rust;
+          craneLib = (crane.mkLib pkgs).overrideToolchain (_: rust);
+
+          src = lib.fileset.toSource {
+            root = ./.;
+            fileset = lib.fileset.gitTracked ./.;
           };
+
+          commonArgs = {
+            inherit src;
+            strictDeps = true;
+
+            nativeBuildInputs = [ pkgs.pkgconf ];
+
+            buildInputs = with pkgs; [
+              fontconfig
+              libgbm
+              libinput
+              pango
+              udev
+              xkeyboard-config
+            ];
+          };
+
+          # Only the third-party dependencies of the whole workspace, built from
+          # a dummy source so this derivation is unaffected by edits to any
+          # crate's own code.
+          cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+
+          jay-config = pkgs.callPackage jayConfigPackage {
+            inherit craneLib commonArgs cargoArtifacts;
+          };
+
           jay = pkgs.callPackage jayPackage {
-            inherit rustPlatform;
+            inherit craneLib commonArgs;
+            cargoArtifacts = jay-config;
           };
         in
         {
-          inherit jay;
+          inherit jay jay-config;
           default = jay;
         }
       );
 
-      overlays.default = final: _: { inherit (self.packages.${final.system}) jay; };
+      overlays.default = final: _: { inherit (self.packages.${final.system}) jay jay-config; };
     };
 }
