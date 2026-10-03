@@ -7152,6 +7152,27 @@ The table has the following fields:
 
   The value of this field should be a boolean.
 
+- `opacity` (optional):
+
+  A multiplier for the opacity of the window contents. Must be in the range
+  `[0, 1]`.
+  
+  `1` leaves the window unchanged and `0` makes it invisible. This does not affect
+  window decorations or popups.
+  
+  - Example:
+  
+    ```toml
+    [[windows]]
+    match.focused = false
+    action = { type = "set-window-theme", theme.opacity = 0.9 }
+    latch = { type = "set-window-theme", theme.opacity = 1 }
+    ```
+
+  The value of this field should be a number.
+
+  The numbers should be greater than or equal to 0.
+
 
 <a name="types-WindowTypeMask"></a>
 ### `WindowTypeMask`

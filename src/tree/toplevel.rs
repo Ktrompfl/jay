@@ -1194,6 +1194,12 @@ impl ToplevelData {
         self.theme[ty].get().as_double_deref()
     }
 
+    pub fn opacity(&self) -> Option<f32> {
+        self.theme(ParentTheme)
+            .and_then(|t| t.opacity.get())
+            .filter(|&o| o < 1.0)
+    }
+
     pub fn modify_theme<R>(&self, ty: ToplevelThemeType, f: impl FnOnce(&ToplevelTheme) -> R) -> R {
         let theme = &self.theme[ty];
         let r = f(theme.get_or_init(|| self.state.toplevel_theme_cache.get(Default::default())));
@@ -1380,10 +1386,13 @@ pub async fn handle_toplevel_theme_change(state: Rc<State>) {
             if data.theme_change[SelfTheme].take() {
                 tl.clone().tl_theme_changed();
             }
-            if data.theme_change[ParentTheme].take()
-                && let Some(parent) = data.parent.get()
-            {
-                parent.cnode_child_theme_changed(data.node_id);
+            if data.theme_change[ParentTheme].take() {
+                if let Some(rect) = tl.tl_render_bounds() {
+                    state.damage(rect);
+                }
+                if let Some(parent) = data.parent.get() {
+                    parent.cnode_child_theme_changed(data.node_id);
+                }
             }
             data.trigger_property_source();
         }

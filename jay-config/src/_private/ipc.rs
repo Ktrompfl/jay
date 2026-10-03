@@ -1144,6 +1144,15 @@ pub enum ClientMessage<'a> {
         window: Window,
         kind: WindowThemeKind,
     },
+    SetWindowThemeOpacity {
+        window: Window,
+        kind: WindowThemeKind,
+        opacity: Option<f32>,
+    },
+    GetWindowThemeOpacity {
+        window: Window,
+        kind: WindowThemeKind,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -1444,6 +1453,9 @@ pub enum Response {
     },
     GetWindowThemeContainerBorders {
         borders: Option<JcContainerBorders>,
+    },
+    GetWindowThemeOpacity {
+        opacity: Option<f32>,
     },
 }
 

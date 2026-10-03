@@ -3065,6 +3065,25 @@ WindowTheme:
         Whether window icons are rendered grayscale.
 
         This is only supported on the Vulkan renderer.
+    opacity:
+      kind: number
+      minimum: 0
+      required: false
+      description: |
+        A multiplier for the opacity of the window contents. Must be in the range
+        `[0, 1]`.
+
+        `1` leaves the window unchanged and `0` makes it invisible. This does not affect
+        window decorations or popups.
+
+        - Example:
+
+          ```toml
+          [[windows]]
+          match.focused = false
+          action = { type = "set-window-theme", theme.opacity = 0.9 }
+          latch = { type = "set-window-theme", theme.opacity = 1 }
+          ```
 
 
 ContainerTheme:

@@ -78,7 +78,7 @@ impl Renderer<'_> {
             if let Some(surface) = ns.lock_surface.get()
                 && surface.surface.buffer.is_some()
             {
-                self.render_surface(&surface.surface, x, y, None);
+                self.render_surface(&surface.surface, x, y, None, None);
             }
             return;
         }
@@ -229,7 +229,13 @@ impl Renderer<'_> {
                     if data.surface.buffer.is_some() {
                         let rect = data.rel_pos[RenderTL].get().move_(x, y);
                         let bounds = self.base.scale_rect(rect);
-                        self.render_surface(&data.surface, rect.x1(), rect.y1(), Some(&bounds));
+                        self.render_surface(
+                            &data.surface,
+                            rect.x1(),
+                            rect.y1(),
+                            Some(&bounds),
+                            None,
+                        );
                     }
                 }
             }
@@ -409,12 +415,14 @@ impl Renderer<'_> {
     }
 
     pub fn render_xwindow(&mut self, tl: &Xwindow, x: i32, y: i32, bounds: Option<&Rect>) {
-        self.render_surface(&tl.x.surface, x, y, bounds);
+        let opacity = tl.tl_data().opacity();
+        self.render_surface(&tl.x.surface, x, y, bounds, opacity);
         self.render_tl_aux(tl.tl_data(), bounds, true);
     }
 
     pub fn render_xdg_toplevel(&mut self, tl: &XdgToplevel, x: i32, y: i32, bounds: Option<&Rect>) {
-        self.render_xdg_surface(&tl.xdg, x, y, bounds);
+        let opacity = tl.tl_data().opacity();
+        self.render_xdg_surface(&tl.xdg, x, y, bounds, opacity);
         self.render_tl_aux(tl.tl_data(), bounds, true);
     }
 
@@ -424,11 +432,12 @@ impl Renderer<'_> {
         mut x: i32,
         mut y: i32,
         bounds: Option<&Rect>,
+        opacity: Option<f32>,
     ) {
         let surface = &xdg.surface;
         let geo = xdg.geometry(RenderTL);
         (x, y) = geo.translate(x, y);
-        self.render_surface(surface, x, y, bounds);
+        self.render_surface(surface, x, y, bounds, opacity);
     }
 
     fn render_tl_aux(
@@ -471,9 +480,16 @@ impl Renderer<'_> {
         );
     }
 
-    pub fn render_surface(&mut self, surface: &WlSurface, x: i32, y: i32, bounds: Option<&Rect>) {
+    pub fn render_surface(
+        &mut self,
+        surface: &WlSurface,
+        x: i32,
+        y: i32,
+        bounds: Option<&Rect>,
+        opacity: Option<f32>,
+    ) {
         let (x, y) = self.base.scale_point(x, y);
-        self.render_surface_scaled(surface, x, y, None, bounds, false);
+        self.render_surface_scaled(surface, x, y, None, bounds, false, opacity);
     }
 
     pub fn render_surface_scaled(
@@ -484,6 +500,7 @@ impl Renderer<'_> {
         pos_rel: Option<(i32, i32)>,
         bounds: Option<&Rect>,
         is_subsurface: bool,
+        opacity: Option<f32>,
     ) {
         let children = surface.children.borrow();
         if surface.buffer.is_none() {
@@ -520,15 +537,16 @@ impl Renderer<'_> {
                             Some(pos),
                             bounds,
                             true,
+                            opacity,
                         );
                     }
                 };
             }
             render!(&children.below);
-            self.render_buffer(surface, x, y, *tpoints, size, bounds);
+            self.render_buffer(surface, x, y, *tpoints, size, bounds, opacity);
             render!(&children.above);
         } else {
-            self.render_buffer(surface, x, y, *tpoints, size, bounds);
+            self.render_buffer(surface, x, y, *tpoints, size, bounds, opacity);
         }
     }
 
@@ -540,8 +558,12 @@ impl Renderer<'_> {
         tpoints: SampleRect,
         tsize: (i32, i32),
         bounds: Option<&Rect>,
+        opacity: Option<f32>,
     ) {
-        let alpha = surface.alpha();
+        let alpha = match (surface.alpha(), opacity) {
+            (Some(a), Some(b)) => Some(a * b),
+            (a, b) => a.or(b),
+        };
         let cd = surface.color_description();
         let intent = surface.render_intent();
         let alpha_mode = surface.alpha_mode();
@@ -747,7 +769,7 @@ impl Renderer<'_> {
 
     pub fn render_layer_surface(&mut self, surface: &ZwlrLayerSurfaceV1, x: i32, y: i32) {
         let (dx, dy) = surface.surface.extents.get().position();
-        self.render_surface(&surface.surface, x - dx, y - dy, None);
+        self.render_surface(&surface.surface, x - dx, y - dy, None, None);
     }
 
     fn bounds_are_opaque(

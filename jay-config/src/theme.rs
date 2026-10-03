@@ -400,6 +400,28 @@ impl Deref for WindowTheme {
     }
 }
 
+impl WindowTheme {
+    /// Sets a multiplier for the opacity of the window contents.
+    ///
+    /// The value must be in the range `[0, 1]`. `1` leaves the window unchanged and `0`
+    /// makes it invisible. This does not affect window decorations or popups.
+    pub fn set_opacity(&self, opacity: f32) {
+        get!().set_window_theme_opacity(self.0.window, self.0.kind, Some(opacity));
+    }
+
+    /// Removes the opacity multiplier of the window contents.
+    ///
+    /// See also [`set_opacity`](Self::set_opacity).
+    pub fn unset_opacity(&self) {
+        get!().set_window_theme_opacity(self.0.window, self.0.kind, None);
+    }
+
+    /// Gets the opacity multiplier of the window contents.
+    pub fn get_opacity(&self) -> Option<f32> {
+        get!(None).get_window_theme_opacity(self.0.window, self.0.kind)
+    }
+}
+
 const _: () = {
     use colors::*;
     use sized::*;

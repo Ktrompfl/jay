@@ -60,7 +60,7 @@ impl DndIcon {
         let extents = self.extents(x, y);
         if extents.intersects(&cursor_rect) {
             let (x, y) = cursor_rect.translate(extents.x1(), extents.y1());
-            renderer.render_surface(&self.surface, x, y, None);
+            renderer.render_surface(&self.surface, x, y, None, None);
         }
     }
 }

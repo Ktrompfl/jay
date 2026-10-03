@@ -521,6 +521,31 @@ fn show_window(behavior: &mut CcBehavior<'_>, ui: &mut Ui, window: &dyn Toplevel
                         }
                     },
                 );
+                if ttt == ParentTheme {
+                    let opacity = map!(opacity);
+                    let unused = match data.kind {
+                        ToplevelType::XdgToplevel(_) | ToplevelType::XWindow(_) => None,
+                        _ => Some(NOT_A_CLIENT_WINDOW),
+                    };
+                    tl_theme_row(
+                        ui,
+                        "Opacity",
+                        unused,
+                        opacity.is_some(),
+                        || data.modify_theme(ttt, |t| t.opacity.set(None)),
+                        |ui| {
+                            let mut v = opacity.unwrap_or(1.0);
+                            if DragValue::new(&mut v)
+                                .range(0.0..=1.0)
+                                .speed(0.01)
+                                .ui(ui)
+                                .changed()
+                            {
+                                data.modify_theme(ttt, |t| t.opacity.set(Some(v)));
+                            }
+                        },
+                    );
+                }
                 if ttt == SelfTheme {
                     let borders = map!(container_borders);
                     tl_theme_row(
@@ -723,6 +748,7 @@ struct TlContainerUsage {
 }
 
 const NOT_FLOATING_OR_TILED: &str = "The window is neither floating nor tiled.";
+const NOT_A_CLIENT_WINDOW: &str = "The window is not a client window.";
 const TITLES_HIDDEN: &str = "Titles are hidden.";
 const TITLES_NOT_VISIBLE: &str = "Titles are not visible.";
 const ICONS_NOT_VISIBLE: &str = "Window icons are not visible.";

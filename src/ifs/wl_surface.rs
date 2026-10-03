@@ -2205,7 +2205,7 @@ impl NodeBase for WlSurface {
     }
 
     fn node_render(&self, renderer: &mut Renderer<'_>, x: i32, y: i32, bounds: Option<&Rect>) {
-        renderer.render_surface(self, x, y, bounds);
+        renderer.render_surface(self, x, y, bounds, None);
     }
 
     fn node_client(&self) -> Option<Rc<Client>> {

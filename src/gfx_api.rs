@@ -1242,7 +1242,7 @@ pub fn create_render_pass(
                         let extents = popup.surface.extents.get().move_(pos.x1(), pos.y1());
                         if extents.intersects(&rect) {
                             let (x, y) = rect.translate(pos.x1(), pos.y1());
-                            renderer.render_surface(&popup.surface, x, y, None);
+                            renderer.render_surface(&popup.surface, x, y, None, None);
                         }
                     }
                 }

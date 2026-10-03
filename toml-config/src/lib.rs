@@ -654,9 +654,12 @@ impl Action {
                     }
                 })
             }
-            Action::SetWindowTheme { theme } => {
-                window!(w, apply_window_theme(*w.theme(), &theme))
-            }
+            Action::SetWindowTheme { theme } => window!(w, {
+                apply_window_theme(*w.theme(), &theme);
+                if let Some(v) = theme.opacity {
+                    w.theme().set_opacity(v);
+                }
+            }),
             Action::SetContainerTheme { target, theme } => window!(w, {
                 if let Some(c) = container_target_window(w, target) {
                     let t = c.container_theme();

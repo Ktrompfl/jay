@@ -872,6 +872,7 @@ pub struct ToplevelTheme {
     pub window_icons_grayscale: Cell<Option<bool>>,
     pub title_font: CloneCell<Option<Rc<Arc<str>>>>,
     pub container_borders: Cell<Option<ContainerBordersSetting>>,
+    pub opacity: Cell<Option<f32>>,
 }
 
 macro_rules! toplevel_theme_sizes {

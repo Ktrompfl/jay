@@ -458,7 +458,7 @@ impl NodeBase for XdgPopup {
     }
 
     fn node_render(&self, renderer: &mut Renderer<'_>, x: i32, y: i32, bounds: Option<&Rect>) {
-        renderer.render_xdg_surface(&self.xdg, x, y, bounds);
+        renderer.render_xdg_surface(&self.xdg, x, y, bounds, None);
     }
 
     fn node_client(&self) -> Option<Rc<Client>> {

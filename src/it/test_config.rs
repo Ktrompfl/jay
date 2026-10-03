@@ -484,6 +484,29 @@ impl TestConfig {
         get_response!(reply, GetWindowThemeContainerBorders { borders });
         Ok(borders)
     }
+
+    pub fn set_window_theme_opacity(
+        &self,
+        window: Window,
+        kind: WindowThemeKind,
+        opacity: Option<f32>,
+    ) -> TestResult {
+        self.send(ClientMessage::SetWindowThemeOpacity {
+            window,
+            kind,
+            opacity,
+        })
+    }
+
+    pub fn get_window_theme_opacity(
+        &self,
+        window: Window,
+        kind: WindowThemeKind,
+    ) -> TestResult<Option<f32>> {
+        let reply = self.send_with_reply(ClientMessage::GetWindowThemeOpacity { window, kind })?;
+        get_response!(reply, GetWindowThemeOpacity { opacity });
+        Ok(opacity)
+    }
 }
 
 impl Drop for TestConfig {

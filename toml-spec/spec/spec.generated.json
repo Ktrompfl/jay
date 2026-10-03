@@ -3354,6 +3354,11 @@
         "window-icons-grayscale": {
           "type": "boolean",
           "description": "Whether window icons are rendered grayscale.\n\nThis is only supported on the Vulkan renderer.\n"
+        },
+        "opacity": {
+          "type": "number",
+          "description": "A multiplier for the opacity of the window contents. Must be in the range\n`[0, 1]`.\n\n`1` leaves the window unchanged and `0` makes it invisible. This does not affect\nwindow decorations or popups.\n\n- Example:\n\n  ```toml\n  [[windows]]\n  match.focused = false\n  action = { type = \"set-window-theme\", theme.opacity = 0.9 }\n  latch = { type = \"set-window-theme\", theme.opacity = 1 }\n  ```\n",
+          "minimum": 0.0
         }
       },
       "required": []

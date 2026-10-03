@@ -3636,6 +3636,30 @@ impl ConfigProxyHandler {
         Ok(())
     }
 
+    fn handle_set_window_theme_opacity(
+        &self,
+        window: Window,
+        kind: WindowThemeKind,
+        opacity: Option<f32>,
+    ) -> Result<(), CphError> {
+        if let Some(opacity) = opacity
+            && !(0.0..=1.0).contains(&opacity)
+        {
+            return Err(CphError::InvalidOpacity(opacity));
+        }
+        self.modify_window_theme(window, kind, opacity.is_some(), |t| t.opacity.set(opacity))
+    }
+
+    fn handle_get_window_theme_opacity(
+        &self,
+        window: Window,
+        kind: WindowThemeKind,
+    ) -> Result<(), CphError> {
+        let opacity = self.read_window_theme(window, kind, |t| t.opacity.get())?;
+        self.respond(Response::GetWindowThemeOpacity { opacity });
+        Ok(())
+    }
+
     fn handle_set_workspace_initial_connector(
         &self,
         workspace: Workspace,
@@ -4534,6 +4558,16 @@ impl ConfigProxyHandler {
             ClientMessage::GetWindowThemeContainerBorders { window, kind } => self
                 .handle_get_window_theme_container_borders(window, kind)
                 .wrn("get_window_theme_container_borders")?,
+            ClientMessage::SetWindowThemeOpacity {
+                window,
+                kind,
+                opacity,
+            } => self
+                .handle_set_window_theme_opacity(window, kind, opacity)
+                .wrn("set_window_theme_opacity")?,
+            ClientMessage::GetWindowThemeOpacity { window, kind } => self
+                .handle_get_window_theme_opacity(window, kind)
+                .wrn("get_window_theme_opacity")?,
         }
         Ok(())
     }
@@ -4623,6 +4657,8 @@ enum CphError {
     UnknownClickMethod(ClickMethod),
     #[error("The sized {} is outside the valid range [{}, {}] for component {}", .0, .1.min(), .1.max(), .1.name())]
     InvalidSize(i32, ThemeSized),
+    #[error("The opacity {0} is outside the valid range [0, 1]")]
+    InvalidOpacity(f32),
     #[error("The ol' forker is not available")]
     NoForker,
     #[error("Repeat rate is negative")]

@@ -4,6 +4,7 @@ use crate::config::context::Context;
 use crate::config::extractor::Extractor;
 use crate::config::extractor::ExtractorError;
 use crate::config::extractor::bol;
+use crate::config::extractor::fltorint;
 use crate::config::extractor::opt;
 use crate::config::extractor::recover;
 use crate::config::extractor::s32;
@@ -52,6 +53,7 @@ const WINDOW_ICONS_GRAYSCALE: &str = "window-icons-grayscale";
 const CONTAINER_BORDERS: &str = "container-borders";
 const FOCUSED_BORDER_COLOR: &str = "focused-border-color";
 const SHOW_TITLES: &str = "show-titles";
+const OPACITY: &str = "opacity";
 
 pub struct ThemeParser<'a, 'b, 'c>(pub &'a Context<'b, 'c>);
 
@@ -286,6 +288,21 @@ impl Parser for WindowThemeParser<'_, '_, '_> {
                 .extract(recover(opt(str(CONTAINER_BORDERS))))?
                 .and_then(|value| parse_container_borders(self.cx, value));
         }
+        let mut opacity = None;
+        if !self.container {
+            opacity = ext
+                .extract(recover(opt(fltorint(OPACITY))))?
+                .and_then(|value| {
+                    if value.value < 0.0 || value.value > 1.0 {
+                        log::warn!(
+                            "Opacity must be in the range [0, 1]: {}",
+                            self.cx.error3(value.span)
+                        );
+                        return None;
+                    }
+                    Some(value.value as f32)
+                });
+        }
         macro_rules! color {
             ($e:expr) => {
                 parse_color(self.cx, $e)
@@ -309,6 +326,7 @@ impl Parser for WindowThemeParser<'_, '_, '_> {
             show_window_icons: show_window_icons.despan(),
             window_icons_grayscale: window_icons_grayscale.despan(),
             container_borders,
+            opacity,
         })
     }
 }

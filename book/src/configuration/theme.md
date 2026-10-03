@@ -250,6 +250,10 @@ the corresponding fields in the `[theme]` table.
 
 The container theme also accepts `container-borders`.
 
+The window theme also accepts `opacity`, a multiplier between `0` and `1` for
+the opacity of the window contents. `1` leaves the window unchanged and `0`
+makes it invisible. It does not affect window decorations or popups.
+
 Settings that are not set fall back to other themes and finally to the
 `[theme]` table. Not every setting has an effect on every window. The control
 center marks settings that currently have no effect as unused.
@@ -267,6 +271,15 @@ action = {
     type = "set-window-theme",
     theme = { show-titles = false, border-width = 0 },
 }
+```
+
+Make unfocused windows slightly transparent:
+
+```toml
+[[windows]]
+match.focused = false
+action = { type = "set-window-theme", theme.opacity = 0.9 }
+latch = { type = "set-window-theme", theme.opacity = 1 }
 ```
 
 Use thicker borders and full container borders in the container of the focused

@@ -317,6 +317,7 @@ pub struct WindowTheme {
     pub show_window_icons: Option<bool>,
     pub window_icons_grayscale: Option<bool>,
     pub container_borders: Option<ContainerBorders>,
+    pub opacity: Option<f32>,
 }
 
 #[derive(Debug, Clone, Default)]

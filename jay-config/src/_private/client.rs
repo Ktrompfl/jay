@@ -2641,6 +2641,25 @@ impl ConfigClient {
         borders
     }
 
+    pub fn set_window_theme_opacity(
+        &self,
+        window: Window,
+        kind: WindowThemeKind,
+        opacity: Option<f32>,
+    ) {
+        self.send(&ClientMessage::SetWindowThemeOpacity {
+            window,
+            kind,
+            opacity,
+        });
+    }
+
+    pub fn get_window_theme_opacity(&self, window: Window, kind: WindowThemeKind) -> Option<f32> {
+        let res = self.send_with_response(&ClientMessage::GetWindowThemeOpacity { window, kind });
+        get_response!(res, None, GetWindowThemeOpacity { opacity });
+        opacity
+    }
+
     fn handle_invoke_shortcut(
         &self,
         seat: Seat,
