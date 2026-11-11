@@ -170,7 +170,11 @@ fn create_data(
     };
     let mut fd = PangoFontDescription::from_string(font);
     if let Some(scale) = scale {
-        fd.set_size((fd.size() as f64 * scale).round() as _);
+        let size = match fd.size() {
+            0 => 12 * PANGO_SCALE,
+            size => size,
+        };
+        fd.set_size((size as f64 * scale).round() as _);
     }
     let layout = match pctx.create_layout() {
         Ok(l) => l,
